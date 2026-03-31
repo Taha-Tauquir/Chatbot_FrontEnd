@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Kewordal AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #eef1f7;
+  --panel: #ffffff;
+  --border: rgba(0,0,0,0.07);
+  --surface: #f4f6fa;
+  --surface2: #e9ecf3;
+  --accent: #1a73e8;
+  --accent-hover: #1558c0;
+  --accent-light: #e8f0fe;
+  --k2: #0d9488;
+  --k2-light: #ccfbf1;
+  --text: #111827;
+  --muted: #6b7280;
+  --subtle: #9ca3af;
+  --user-bg: #1a73e8;
+  --user-fg: #ffffff;
+  --ai-bg: #ffffff;
+  --r: 22px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body {
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  min-height:100vh;
+  display:flex;
+  align-items:stretch;
+  background-image:
+    radial-gradient(ellipse at 15% 40%,rgba(26,115,232,.07) 0%,transparent 55%),
+    radial-gradient(ellipse at 85% 70%,rgba(13,148,136,.05) 0%,transparent 55%);
+}
+
+/* ── BACKDROP ── */
+.backdrop {
+  flex:1;display:flex;flex-direction:column;justify-content:center;
+  padding:60px;pointer-events:none;user-select:none;
+}
+.bd-logo{display:flex;align-items:center;gap:10px;margin-bottom:40px;opacity:.45;}
+.bd-icon{width:36px;height:36px;background:linear-gradient(135deg,#1a73e8,#0d9488);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:white;}
+.bd-name{font-size:17px;font-weight:700;color:#374151;letter-spacing:-.3px;}
+.bd-h{font-size:32px;font-weight:700;color:#1f2937;line-height:1.25;letter-spacing:-.8px;margin-bottom:14px;opacity:.22;}
+.bd-p{font-size:15px;color:#6b7280;line-height:1.6;max-width:300px;opacity:.18;}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width:min(520px,100vw);height:100vh;
+  display:flex;flex-direction:column;
+  background:var(--panel);
+  border-left:1px solid var(--border);
+  box-shadow:-8px 0 40px rgba(0,0,0,.07);
+  flex-shrink:0;
+  animation:sideIn .5s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes sideIn{from{transform:translateX(60px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+/* ── HEADER ── */
+.hdr{
+  padding:13px 15px 12px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:9px;flex-shrink:0;
+  background:rgba(255,255,255,.96);backdrop-filter:blur(10px);
+}
+.hdr-logo{display:flex;align-items:center;gap:8px;flex:1;min-width:0;}
+.logo-mark{width:28px;height:28px;background:linear-gradient(135deg,#1a73e8,#0d9488);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;color:white;flex-shrink:0;}
+.logo-name{font-size:14px;font-weight:700;color:var(--text);letter-spacing:-.3px;}
+.status-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);background:var(--surface);border-radius:100px;padding:4px 9px;border:1px solid var(--border);white-space:nowrap;transition:all .3s;}
+.sdot{width:6px;height:6px;border-radius:50%;background:#22c55e;flex-shrink:0;box-shadow:0 0 0 2px rgba(34,197,94,.3);animation:pg 2s infinite;transition:background .3s;}
+.sdot.think{background:#f59e0b;box-shadow:0 0 0 2px rgba(245,158,11,.3);animation:pa .9s infinite;}
+@keyframes pg{0%,100%{box-shadow:0 0 0 2px rgba(34,197,94,.3);}50%{box-shadow:0 0 0 5px rgba(34,197,94,.08);}}
+@keyframes pa{0%,100%{box-shadow:0 0 0 2px rgba(245,158,11,.3);}50%{box-shadow:0 0 0 5px rgba(245,158,11,.08);}}
+.model-toggle{display:flex;align-items:center;background:var(--surface);border-radius:100px;padding:3px;gap:2px;border:1px solid var(--border);flex-shrink:0;}
+.mbtn{padding:4px 11px;border-radius:100px;font-size:11.5px;font-weight:600;font-family:'DM Sans',sans-serif;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:3px;}
+.mbtn.active{background:white;box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.mbtn.active.k1{color:var(--accent);}
+.mbtn.active.k2{color:var(--k2);}
+.mbtn .crown{font-size:9px;}
+.hicon{width:30px;height:30px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;flex-shrink:0;transition:background .15s;}
+.hicon:hover{background:var(--surface);}
+.stag{font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:3px 9px;white-space:nowrap;flex-shrink:0;display:none;}
+.stag.on{display:block;}
+
+/* ── MESSAGES ── */
+.msgs{flex:1;overflow-y:auto;padding:20px 15px 10px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;}
+.msgs::-webkit-scrollbar{width:3px;}
+.msgs::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:4px;}
+
+/* Welcome */
+.welcome{text-align:center;padding:10px 16px 4px;}
+.welcome h3{font-size:19px;font-weight:700;color:var(--text);letter-spacing:-.4px;margin-bottom:5px;}
+.welcome p{font-size:13px;color:var(--muted);line-height:1.5;}
+.sug-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:0 8px;}
+.spill{font-size:12px;color:var(--muted);cursor:pointer;padding:5px 12px;border-radius:100px;border:1px solid #e5e7eb;background:var(--surface);transition:all .18s;font-family:'DM Sans',sans-serif;font-weight:400;}
+.spill:hover{background:var(--accent-light);border-color:rgba(26,115,232,.2);color:var(--accent);}
+.help-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+.hlink{font-size:11px;color:var(--subtle);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;transition:color .15s;display:flex;align-items:center;gap:3px;padding:0;}
+.hlink:hover{color:var(--accent);}
+.hdiv{color:#e5e7eb;font-size:10px;}
+
+/* Rows */
+.row{display:flex;gap:8px;align-items:flex-end;animation:mi .28s ease both;}
+@keyframes mi{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.row.user{flex-direction:row-reverse;}
+.av{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;}
+.av.ai{background:linear-gradient(135deg,#1a73e8,#0d9488);color:white;font-size:11px;}
+.av.usr{background:#374151;color:white;}
+.bbl{max-width:82%;padding:10px 14px;font-size:13.5px;line-height:1.55;white-space:pre-wrap;}
+.bbl.ai{background:var(--ai-bg);color:var(--text);border:1px solid var(--border);border-radius:16px;border-bottom-left-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.bbl.user{background:var(--user-bg);color:var(--user-fg);border-radius:16px;border-bottom-right-radius:4px;}
+.bbl strong{color:var(--accent);font-weight:700;}
+.bbl.user strong{color:rgba(255,255,255,.9);}
+
+/* Typing */
+.tdots{display:flex;gap:4px;align-items:center;padding:3px 0;}
+.tdots span{width:6px;height:6px;border-radius:50%;background:#9ca3af;animation:db 1.2s infinite;}
+.tdots span:nth-child(2){animation-delay:.2s;}.tdots span:nth-child(3){animation-delay:.4s;}
+@keyframes db{0%,80%,100%{transform:translateY(0);opacity:.35;}40%{transform:translateY(-5px);opacity:1;}}
+
+/* Bubble actions */
+.bbl-acts{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;}
+.abtn{padding:7px 14px;border-radius:100px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border:none;transition:all .15s;}
+.abtn.primary{background:linear-gradient(135deg,var(--accent),#0d4faa);color:white;box-shadow:0 2px 8px rgba(26,115,232,.2);}
+.abtn.primary:hover{opacity:.9;transform:scale(1.02);}
+.abtn.secondary{background:var(--surface);color:var(--text);border:1px solid var(--border);}
+.abtn.secondary:hover{background:var(--surface2);}
+.abtn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;}
+
+/* Selector */
+.sel-card{margin-top:12px;padding:12px 14px;background:var(--surface);border-radius:12px;border:1px solid var(--border);}
+.sel-lbl{font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:500;}
+.sel-row{display:flex;gap:8px;}
+.sel-row select{flex:1;padding:9px 11px;border-radius:10px;border:1px solid var(--border);background:white;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);}
+.sel-sub{padding:9px 14px;border:none;border-radius:10px;background:var(--accent);color:white;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;}
+.sel-sub:hover{background:var(--accent-hover);}
+
+/* Review open btn */
+.rev-open{margin-top:10px;padding:9px 16px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),#0d4faa);color:white;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif;font-size:13px;box-shadow:0 2px 10px rgba(26,115,232,.2);}
+
+/* ── COMPOSER ── */
+.composer{border-top:1px solid var(--border);padding:10px 14px 14px;background:var(--panel);flex-shrink:0;}
+.cchips{display:flex;flex-wrap:wrap;gap:6px;min-height:0;margin-bottom:8px;}
+.cchip{font-size:12px;color:var(--muted);cursor:pointer;padding:4px 11px;border-radius:100px;border:1px solid #e9ecf0;background:var(--surface);transition:all .18s;font-family:'DM Sans',sans-serif;font-weight:400;}
+.cchip:hover{background:var(--accent-light);border-color:rgba(26,115,232,.2);color:var(--accent);}
+.iwrap{display:flex;align-items:flex-end;gap:10px;background:var(--surface);border-radius:16px;padding:10px 12px;border:1.5px solid transparent;transition:border-color .2s,box-shadow .2s;}
+.iwrap.focused{border-color:rgba(26,115,232,.3);box-shadow:0 0 0 3px rgba(26,115,232,.07);background:white;}
+#msgInput{flex:1;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--text);resize:none;outline:none;max-height:120px;line-height:1.5;min-height:20px;}
+#msgInput::placeholder{color:var(--subtle);}
+.sbtn{width:34px;height:34px;border-radius:10px;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:white;flex-shrink:0;font-size:16px;transition:background .15s,transform .1s;}
+.sbtn:hover{background:var(--accent-hover);transform:scale(1.04);}
+.sbtn:active{transform:scale(.96);}
+.sbtn:disabled{background:#d1d5db;cursor:not-allowed;transform:none;}
+.cfooter{display:flex;align-items:center;justify-content:space-between;padding:7px 2px 0;}
+.helper-btns{display:flex;gap:10px;}
+.helpbtn{font-size:11px;color:var(--subtle);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;transition:color .15s;display:flex;align-items:center;gap:3px;padding:0;}
+.helpbtn:hover{color:var(--accent);}
+.disc{font-size:11px;color:var(--subtle);}
+.debugbar{border-top:1px solid var(--border);background:#f9fbff;padding:10px 16px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);white-space:pre-wrap;display:none;max-height:180px;overflow:auto;flex-shrink:0;}
+
+/* ── UPGRADE MODAL ── */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(5px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;animation:fi .2s ease;}
+@keyframes fi{from{opacity:0;}to{opacity:1;}}
+.mo.hidden{display:none;}
+.ucard{background:white;border-radius:24px;width:min(420px,100%);overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.2);animation:pi .3s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes pi{from{opacity:0;transform:scale(.88) translateY(12px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.utop{background:linear-gradient(135deg,#0d9488,#059669);padding:26px 26px 22px;color:white;position:relative;overflow:hidden;}
+.utop::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);}
+.ubadge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.2);border-radius:100px;padding:4px 10px;font-size:11px;font-weight:600;margin-bottom:12px;}
+.utop h2{font-size:21px;font-weight:700;letter-spacing:-.5px;margin-bottom:6px;}
+.utop p{font-size:13px;opacity:.85;line-height:1.5;}
+.ubody{padding:22px 26px;}
+.ubody h4{font-size:11px;font-weight:600;color:var(--subtle);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px;}
+.flist{display:flex;flex-direction:column;gap:11px;margin-bottom:20px;}
+.fitem{display:flex;align-items:flex-start;gap:10px;}
+.ficon{width:30px;height:30px;border-radius:8px;background:var(--k2-light);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.ftext strong{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:1px;}
+.ftext span{font-size:12px;color:var(--muted);}
+.ucta{width:100%;padding:12px;background:linear-gradient(135deg,#0d9488,#059669);color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;transition:opacity .15s,transform .1s;}
+.ucta:hover{opacity:.92;transform:scale(1.01);}
+.udism{width:100%;padding:9px;background:transparent;color:var(--muted);border:none;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:color .15s;}
+.udism:hover{color:var(--text);}
+
+/* Review modal */
+.rback{position:fixed;inset:0;background:rgba(16,24,40,.45);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
+.rcard{width:min(1400px,96vw);max-height:88vh;background:white;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.18);border:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.rhdr{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--border);}
+.rtitle{font-size:15px;font-weight:700;}
+.rclose{border:1px solid var(--border);background:white;border-radius:10px;padding:7px 12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.gwrap{overflow:auto;padding:12px;}
+.kgrid{min-width:1250px;width:100%;border-collapse:collapse;}
+.kgrid th,.kgrid td{border:1px solid var(--border);padding:10px;vertical-align:top;text-align:left;}
+.kgrid th{position:sticky;top:0;background:#f8faff;z-index:1;font-size:13px;}
+.kgrid input[type=text],.kgrid textarea{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;font-family:inherit;}
+.kgrid textarea{min-height:84px;resize:vertical;}
+.gfooter{display:flex;gap:10px;flex-wrap:wrap;padding:14px 16px;border-top:1px solid var(--border);background:#fafcff;}
+.gfooter button{padding:10px 14px;border:none;border-radius:10px;background:linear-gradient(135deg,var(--accent),#0d4faa);color:white;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif;}
+.gfooter .sec,.kgrid .sec{background:white;color:var(--text);border:1px solid var(--border);}
+button:disabled,input:disabled,textarea:disabled,select:disabled{opacity:.5;cursor:not-allowed;}
+</style>
+</head>
+<body>
+
+<!-- Page backdrop -->
+<div class="backdrop">
+  <div class="bd-logo"><div class="bd-icon">✦</div><span class="bd-name">Kewordal</span></div>
+  <h2 class="bd-h">Your keyword<br>workspace</h2>
+  <p class="bd-p">Manage subjects, lists and keywords. Your AI assistant is ready on the right.</p>
+</div>
+
+<!-- Upgrade modal -->
+<div class="mo hidden" id="upModal">
+  <div class="ucard">
+    <div class="utop">
+      <div class="ubadge">✦ K2 Model</div>
+      <h2>Unlock K2 Intelligence</h2>
+      <p>K2 is our most capable model — deeper context, smarter generation, priority access.</p>
+    </div>
+    <div class="ubody">
+      <h4>What's included with K2</h4>
+      <div class="flist">
+        <div class="fitem"><div class="ficon">🧠</div><div class="ftext"><strong>3× longer memory</strong><span>60-turn context vs 20 on K1. Never loses the thread.</span></div></div>
+        <div class="fitem"><div class="ficon">⚡</div><div class="ftext"><strong>Priority speed</strong><span>Dedicated compute — fast even at peak hours.</span></div></div>
+        <div class="fitem"><div class="ficon">🔍</div><div class="ftext"><strong>Richer keyword intelligence</strong><span>Better definitions, bulk generation & distractors.</span></div></div>
+        <div class="fitem"><div class="ficon">🖼️</div><div class="ftext"><strong>Image generation</strong><span>Auto-generate cover images for keywords & lists.</span></div></div>
+      </div>
+      <button class="ucta">Upgrade to Premium →</button>
+      <button class="udism" id="dismissUp">Stay on K1 for free</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── CHAT SIDEBAR ── -->
+<div class="sidebar">
+
+  <div class="hdr">
+    <div class="hdr-logo">
+      <div class="logo-mark">✦</div>
+      <span class="logo-name">Kewordal AI</span>
+    </div>
+    <div class="status-pill"><div class="sdot" id="sdot"></div><span id="stxt">Connecting…</span></div>
+    <span class="stag" id="stag"></span>
+    <div class="model-toggle">
+      <button class="mbtn active k1" id="bk1" onclick="selectModel('k1')">K1</button>
+      <button class="mbtn k2" id="bk2" onclick="selectModel('k2')">K2 <span class="crown">👑</span></button>
+    </div>
+    <button class="hicon" title="New chat" onclick="location.reload()">↺</button>
+  </div>
+
+  <div class="msgs" id="messages"></div>
+
+  <div class="composer">
+    <div class="cchips" id="cchips"></div>
+    <div class="iwrap" id="iwrap">
+      <textarea id="msgInput" rows="1" placeholder="Enter a prompt here…"></textarea>
+      <button class="sbtn" id="sendBtn" disabled>➤</button>
+    </div>
+    <div class="cfooter">
+      <div class="helper-btns">
+        <button class="helpbtn" id="hbFlow">📖 Flow guide</button>
+        <button class="helpbtn" id="hbProg">📊 My progress</button>
+        <button class="helpbtn" id="hbStep">❓ This step</button>
+      </div>
+      <span class="disc">AI can make mistakes.</span>
+    </div>
+  </div>
+
+  <div class="debugbar" id="debugbar"></div>
+</div>
+  <script src="app-config.js"></script>
+
+<script>
+  const API_BASE = window.APP_CONFIG.API_BASE;
+let sessionId = null, isSending = false, bearerToken = null, typingId = null;
+
+const msgs    = document.getElementById("messages");
+const msgInput= document.getElementById("msgInput");
+const sendBtn = document.getElementById("sendBtn");
+const cchips  = document.getElementById("cchips");
+const sdot    = document.getElementById("sdot");
+const stxt    = document.getElementById("stxt");
+const stag    = document.getElementById("stag");
+const debugbar= document.getElementById("debugbar");
+
+if (new URLSearchParams(location.search).get("debug")==="1") debugbar.style.display="block";
+
+/* ── Status ── */
+function setStatus(state, label) {
+  sdot.className = "sdot" + (state==="think" ? " think" : "");
+  stxt.textContent = label;
+}
+
+/* ── Upgrade modal ── */
+document.getElementById("dismissUp").onclick = () => document.getElementById("upModal").classList.add("hidden");
+document.getElementById("upModal").addEventListener("click", e => { if(e.target===e.currentTarget) e.currentTarget.classList.add("hidden"); });
+function selectModel(m) {
+  if(m==="k2"){ document.getElementById("upModal").classList.remove("hidden"); return; }
+  document.getElementById("bk1").classList.toggle("active", m==="k1");
+  document.getElementById("bk2").classList.toggle("active", m==="k2");
+}
+
+/* ── Auth ── */
+function authH(json=true) {
+  const h={}; if(json) h["Content-Type"]="application/json";
+  if(bearerToken) h["Authorization"]=`Bearer ${bearerToken}`; return h;
+}
+async function fetchDevToken() {
+  const body = new URLSearchParams();
+  body.append("client_id", "dev-test");
+  body.append("grant_type", "password");
+  body.append("password", "1234");
+  body.append("username", "mestryrahul02@gmail.com");
+  body.append("client_secret", "2oEXf26KVBenEEPv35afuAy0U1lTAIqO");
+
+  const r = await fetch("https://auth.dev.sandbox.kewordal.com/realms/dev/protocol/openid-connect/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Authorization": "Basic a2V5d29yZC1zZXJ2aWNlOnp6S1JjOWJHU0pTd1Q2TlJzRG12THpVN0tqUlBhTmV6"
+    },
+    body: body.toString()
+  });
+
+  const d = await r.json().catch(() => ({}));
+
+  if (!r.ok) {
+    throw new Error(
+      d.error_description ||
+      d.error ||
+      d.detail ||
+      d.message ||
+      `Token failed (${r.status})`
+    );
+  }
+
+  const t = (d.access_token || "").trim();
+  if (!t) throw new Error("Empty token");
+
+  return t;
+}
+
+/* ── Helpers ── */
+function fmt(t){ return String(t||"").replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>"); }
+function setCD(d){ msgInput.disabled=d; sendBtn.disabled=d||!msgInput.value.trim(); }
+function disableIn(el){ if(!el) return; el.querySelectorAll("button,select,input,textarea").forEach(e=>e.disabled=true); }
+function dbg(d){ debugbar.textContent=JSON.stringify(d,null,2); }
+
+/* ── Typing indicator ── */
+function showTyping() {
+  if(typingId) return;
+  const id="t"+Date.now(); typingId=id;
+  const row=document.createElement("div"); row.className="row"; row.id=id;
+  const av=document.createElement("div"); av.className="av ai"; av.textContent="K";
+  const bbl=document.createElement("div"); bbl.className="bbl ai";
+  bbl.innerHTML='<div class="tdots"><span></span><span></span><span></span></div>';
+  row.appendChild(av); row.appendChild(bbl);
+  msgs.appendChild(row); msgs.scrollTop=msgs.scrollHeight;
+}
+function hideTyping(){ if(!typingId) return; document.getElementById(typingId)?.remove(); typingId=null; }
+
+/* ── Composer chips ── */
+function renderChips(sug=[]) {
+  const raw=Array.isArray(sug)?sug:[], seen=new Set(), dd=[];
+  raw.forEach(it=>{ const k=`${it?.label}::${it?.value}`; if(!seen.has(k)){ seen.add(k); dd.push(it); } });
+  cchips.innerHTML="";
+  dd.slice(0,4).forEach(it=>{
+    const c=document.createElement("button"); c.type="button"; c.className="cchip"; c.textContent=it.label;
+    c.addEventListener("click",async e=>{ e.preventDefault(); e.stopPropagation(); if(isSending) return; await sendMsg(it.value,it.label); });
+    cchips.appendChild(c);
+  });
+}
+
+/* ── Selector ── */
+function renderSel(bbl, uiHints) {
+  if(!uiHints?.selector?.options?.length) return;
+  const card=document.createElement("div"); card.className="sel-card";
+  const lbl=document.createElement("div"); lbl.className="sel-lbl"; lbl.textContent=uiHints.selector.label||"Choose an option"; card.appendChild(lbl);
+  const row=document.createElement("div"); row.className="sel-row";
+  const sel=document.createElement("select");
+  uiHints.selector.options.forEach(o=>{ const opt=document.createElement("option"); opt.value=o.value; opt.textContent=o.label; sel.appendChild(opt); });
+  const btn=document.createElement("button"); btn.type="button"; btn.className="sel-sub"; btn.textContent=uiHints.selector.submitLabel||"Select";
+  btn.addEventListener("click",async e=>{ e.preventDefault(); e.stopPropagation(); if(isSending) return; disableIn(card); await sendMsg(sel.value,sel.options[sel.selectedIndex]?.text||"Selected"); });
+  row.appendChild(sel); row.appendChild(btn); card.appendChild(row); bbl.appendChild(card);
+}
+
+/* ── Review modal ── */
+function openReview(rd) {
+  if(!rd?.items?.length) return;
+  const back=document.createElement("div"); back.className="rback";
+  const card=document.createElement("div"); card.className="rcard";
+  const hdr=document.createElement("div"); hdr.className="rhdr";
+  const title=document.createElement("div"); title.className="rtitle"; title.textContent=rd.title||"Review keywords";
+  const cl=document.createElement("button"); cl.type="button"; cl.className="rclose"; cl.textContent="✕ Close";
+  cl.onclick=()=>{ if(document.body.contains(back)) document.body.removeChild(back); };
+  hdr.appendChild(title); hdr.appendChild(cl); card.appendChild(hdr);
+
+  const gw=document.createElement("div"); gw.className="gwrap";
+  const tbl=document.createElement("table"); tbl.className="kgrid";
+  tbl.innerHTML=`<thead><tr>
+    <th style="width:60px">Select</th><th style="width:170px">Name</th>
+    <th style="width:270px">Definition</th><th style="width:270px">Question</th>
+    <th style="width:160px">Context</th><th style="width:230px">Distractors</th>
+    <th style="width:110px">Action</th>
+  </tr></thead><tbody></tbody>`;
+  const tbody=tbl.querySelector("tbody");
+
+  function buildRow(item){
+    const tr=document.createElement("tr");
+    const mc=c=>{ const td=document.createElement("td"); td.appendChild(c); return td; };
+    const cb=document.createElement("input"); cb.type="checkbox"; cb.checked=item.selected!==false;
+    const ni=document.createElement("input"); ni.type="text"; ni.value=item.name||"";
+    const dt=document.createElement("textarea"); dt.value=item.definition||"";
+    const qt=document.createElement("textarea"); qt.value=item.question||"";
+    const ci=document.createElement("input"); ci.type="text"; ci.value=item.context||"";
+    const dit=document.createElement("textarea"); dit.value=Array.isArray(item.distractors)?item.distractors.join(", "):"";
+    const rb=document.createElement("button"); rb.type="button"; rb.className="sec"; rb.textContent="Regen";
+    rb.addEventListener("click",async e=>{
+      e.preventDefault(); e.stopPropagation(); if(isSending) return;
+      const items=Array.from(tbody.querySelectorAll("tr")).map(r=>r.__c());
+      disableIn(card); if(document.body.contains(back)) document.body.removeChild(back);
+      await sendMsg(`__json__:${JSON.stringify({action:"regenerate_generated_keyword",itemId:item.id,items})}`,"Regenerate Keyword");
+    });
+    tr.appendChild(mc(cb)); tr.appendChild(mc(ni)); tr.appendChild(mc(dt)); tr.appendChild(mc(qt));
+    tr.appendChild(mc(ci)); tr.appendChild(mc(dit)); tr.appendChild(mc(rb));
+    tr.__c=()=>({ id:item.id,tempId:item.id,selected:cb.checked,name:ni.value.trim(),definition:dt.value.trim(),question:qt.value.trim(),context:ci.value.trim(),distractors:dit.value.split(",").map(x=>x.trim()).filter(Boolean) });
+    return tr;
+  }
+  rd.items.forEach(it=>tbody.appendChild(buildRow(it)));
+  gw.appendChild(tbl); card.appendChild(gw);
+
+  const ft=document.createElement("div"); ft.className="gfooter";
+  const sv=document.createElement("button"); sv.type="button"; sv.textContent=rd.submitLabel||"Save Selected";
+  const dc=document.createElement("button"); dc.type="button"; dc.className="sec"; dc.textContent=rd.discardLabel||"Discard Generated Keywords";
+  sv.addEventListener("click",async e=>{ e.preventDefault(); e.stopPropagation(); if(isSending) return;
+    const items=Array.from(tbody.querySelectorAll("tr")).map(r=>r.__c());
+    disableIn(card); if(document.body.contains(back)) document.body.removeChild(back);
+    await sendMsg(`__json__:${JSON.stringify({action:"submit_generated_keywords",items})}`,rd.submitLabel||"Save Selected");
+  });
+  dc.addEventListener("click",async e=>{ e.preventDefault(); e.stopPropagation(); if(isSending) return;
+    disableIn(card); if(document.body.contains(back)) document.body.removeChild(back);
+    await sendMsg(`__json__:${JSON.stringify({action:"discard_generated_keywords"})}`,rd.discardLabel||"Discard");
+  });
+  ft.appendChild(sv); ft.appendChild(dc); card.appendChild(ft);
+  back.appendChild(card); document.body.appendChild(back);
+  back.addEventListener("click",e=>{ if(e.target===back && document.body.contains(back)) document.body.removeChild(back); });
+}
+
+/* ── Add message ── */
+function addMsg(role, text, actions=[], uiHints={}) {
+  document.getElementById("welcomeBlock")?.remove();
+  const row=document.createElement("div"); row.className=`row${role==="user"?" user":""}`;
+  const av=document.createElement("div"); av.className=`av${role==="user"?" usr":" ai"}`; av.textContent=role==="user"?"You":"K";
+  const bbl=document.createElement("div"); bbl.className=`bbl ${role==="user"?"user":"ai"}`; bbl.innerHTML=fmt(text);
+
+  const sa=Array.isArray(actions)?actions:[];
+  if(sa.length||uiHints.showSkip){
+    const ae=document.createElement("div"); ae.className="bbl-acts";
+    sa.forEach(a=>{
+      const btn=document.createElement("button"); btn.type="button";
+      btn.className=`abtn ${a.type==="button"?"primary":"secondary"}`; btn.textContent=a.label;
+      btn.addEventListener("click",async e=>{ e.preventDefault(); e.stopPropagation(); if(isSending) return; disableIn(bbl); await sendMsg(a.value,a.label); });
+      ae.appendChild(btn);
+    });
+    if(uiHints.showSkip){
+      const sk=document.createElement("button"); sk.type="button"; sk.className="abtn secondary"; sk.textContent="Skip";
+      sk.addEventListener("click",async e=>{ e.preventDefault(); e.stopPropagation(); if(isSending) return; disableIn(bbl); await sendMsg(uiHints.skipValue||"__skip__","Skip"); });
+      ae.appendChild(sk);
+    }
+    if(ae.children.length) bbl.appendChild(ae);
+  }
+
+  renderSel(bbl, uiHints);
+
+  if(uiHints.reviewDialog?.items?.length){
+    const ob=document.createElement("button"); ob.type="button"; ob.className="rev-open";
+    ob.textContent=uiHints.reviewDialog.openLabel||"Review keywords";
+    ob.addEventListener("click",e=>{ e.preventDefault(); e.stopPropagation(); if(isSending) return; openReview(uiHints.reviewDialog); });
+    bbl.appendChild(ob);
+  }
+
+  row.appendChild(av); row.appendChild(bbl);
+  msgs.appendChild(row); msgs.scrollTop=msgs.scrollHeight;
+  if(role==="bot") renderChips(uiHints.suggestions||[]);
+}
+
+/* ── Session ── */
+async function createSession() {
+  if(isSending) return; isSending=true; setCD(true); setStatus("think","Connecting…");
+  try {
+    bearerToken = await fetchDevToken();
+    setStatus("think","Starting session…");
+    const r=await fetch(`${API_BASE}/api/chat/session`,{ method:"POST",headers:authH(true),body:JSON.stringify({}) });
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.detail||d.message||`Session failed (${r.status})`);
+    sessionId=d.session_id;
+    const tier=d.modelTier==="k2"?"K2 Pro":"K1 Standard";
+    const isK2 = d.modelTier === "k2";
+
+document.getElementById("bk1").classList.toggle("active", !isK2);
+document.getElementById("bk2").classList.toggle("active", isK2);
+    const name=d.firstName?` · ${d.firstName}`:"";
+    setStatus("online","Online");
+    stag.textContent=`${tier}${name}`; stag.classList.add("on");
+    msgs.innerHTML=""; renderChips([]);
+
+    // Welcome block
+    const wb=document.createElement("div"); wb.id="welcomeBlock";
+    wb.innerHTML=`
+      <div class="welcome"><h3>How can I help you today?</h3><p>Ask anything about your keywords, lists, or subjects.</p></div>
+      <div class="sug-row">
+        <span class="spill" onclick="qs(this)">Create a new list</span>
+        <span class="spill" onclick="qs(this)">Add a keyword</span>
+        <span class="spill" onclick="qs(this)">Generate content</span>
+        <span class="spill" onclick="qs(this)">Search for a keyword</span>
+        <span class="spill" onclick="qs(this)">Generate an image</span>
+      </div>
+      <div class="help-row">
+        <button class="hlink" onclick="hs('help','Explain the Flow')">📖 Flow guide</button>
+        <span class="hdiv">·</span>
+        <button class="hlink" onclick="hs('show progress','My Progress')">📊 Progress</button>
+        <span class="hdiv">·</span>
+        <button class="hlink" onclick="hs('help','This Step')">❓ This step</button>
+      </div>`;
+    msgs.appendChild(wb);
+
+    addMsg("bot",d.greeting||"Hello.",d.actions||[],d.uiHints||{});
+    dbg(d);
+  } catch(err) {
+    setStatus("online","Offline");
+    addMsg("bot",`Couldn't start session. ${String(err)}`);
+    dbg({error:String(err)});
+  } finally { isSending=false; setCD(false); }
+}
+
+/* ── Send ── */
+async function sendMsg(text, display=null) {
+  if(isSending) return;
+  if(!sessionId){ addMsg("bot","Session not ready. Please wait."); return; }
+  const trimmed=(text||"").trim(); if(!trimmed) return;
+  const vis=display||(trimmed==="__skip__"?"Skip":trimmed);
+  isSending=true; setCD(true);
+  if(vis!=="__skip__") addMsg("user",vis);
+  setStatus("think","Thinking…");
+  showTyping();
+  try {
+    const r=await fetch(`${API_BASE}/api/chat/message`,{ method:"POST",headers:authH(true),body:JSON.stringify({session_id:sessionId,message:trimmed}) });
+    const d=await r.json();
+    hideTyping();
+    addMsg("bot",d.reply||"No reply received.",d.actions||[],d.uiHints||{});
+    dbg(d.debug||{});
+  } catch(err) {
+    hideTyping();
+    addMsg("bot","Something went wrong. Please try again.");
+    dbg({error:String(err)});
+  } finally {
+    setStatus("online","Online");
+    isSending=false; setCD(false); msgInput.focus();
+  }
+}
+
+/* ── Input events ── */
+function ar(){ msgInput.style.height="auto"; msgInput.style.height=Math.min(msgInput.scrollHeight,120)+"px"; }
+msgInput.addEventListener("input",()=>{ ar(); sendBtn.disabled=isSending||!msgInput.value.trim(); });
+msgInput.addEventListener("keydown",async e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); if(isSending) return; const v=msgInput.value; msgInput.value=""; ar(); sendBtn.disabled=true; await sendMsg(v); } });
+msgInput.addEventListener("focus",()=>document.getElementById("iwrap").classList.add("focused"));
+msgInput.addEventListener("blur",()=>document.getElementById("iwrap").classList.remove("focused"));
+sendBtn.addEventListener("click",async e=>{ e.preventDefault(); if(isSending) return; const v=msgInput.value; msgInput.value=""; ar(); sendBtn.disabled=true; await sendMsg(v); });
+document.getElementById("hbFlow").addEventListener("click",async e=>{ e.preventDefault(); if(!isSending) await sendMsg("help","Explain the Flow"); });
+document.getElementById("hbProg").addEventListener("click",async e=>{ e.preventDefault(); if(!isSending) await sendMsg("show progress","My Progress"); });
+document.getElementById("hbStep").addEventListener("click",async e=>{ e.preventDefault(); if(!isSending) await sendMsg("help","Explain This Step"); });
+
+window.qs=async function(el){ await sendMsg(el.textContent,el.textContent); };
+window.hs=async function(v,l){ if(!isSending) await sendMsg(v,l); };
+
+window.addEventListener("load",createSession);
+</script>
+</body>
+</html>
